@@ -118,7 +118,7 @@ def run_category(cat_id: str, cat_config: dict, service, dry_run: bool = False):
         
         # CSV 업로드 (정량 데이터가 있는 경우)
         if quant_df is not None and not quant_df.empty:
-            csv_name = f"{cat_id}_{cat_name}_DB.csv"
+            csv_name = f"{cat_id}_DB.csv"
             upload_or_update_csv(service, folder_id, csv_name, quant_df)
         
         # MD 업로드 (정성 리포트)
