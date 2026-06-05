@@ -51,7 +51,7 @@ def generate_analysis(
         return f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> GEMINI_API_KEY가 설정되지 않아 AI 분석을 생성할 수 없습니다.\n"
     
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-2.5-pro')
     
     # 뉴스 결과 포맷팅
     news_text = "(이번 주 검색된 뉴스가 없습니다. 자체 지식 기반으로 분석하세요.)"
