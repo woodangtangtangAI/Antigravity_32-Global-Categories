@@ -41,7 +41,12 @@ def get_yf_safe(ticker, name, category, unit, freq):
     try:
         data = yf.download(ticker, period="5d", interval="1d", progress=False)
         if not data.empty:
-            last_val = data['Close'].iloc[-1]
+            close_data = data['Close']
+            if isinstance(close_data, pd.DataFrame):
+                close_data = close_data[ticker]
+            last_val = close_data.iloc[-1]
+            if isinstance(last_val, pd.Series):
+                last_val = last_val.iloc[0]
             last_date = data.index[-1]
             return pd.DataFrame({
                 'Date': [last_date.strftime('%Y-%m-%d')],
