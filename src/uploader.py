@@ -26,77 +26,70 @@ def get_drive_service():
     return build('drive', 'v3', credentials=creds)
 
 
-def find_or_create_folder(service, folder_name: str, parent_id: str) -> str:
-    """Google Drive에서 폴더를 찾거나 없으면 새로 생성합니다.
-    
-    Returns:
-        폴더 ID
-    """
-    # 기존 폴더 검색
+def find_folder(service, folder_name: str, parent_id: str) -> str:
+    """Google Drive에서 폴더를 찾습니다 (생성하지 않음)."""
     query = f"name='{folder_name}' and '{parent_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
     results = service.files().list(q=query, fields='files(id, name)').execute()
     items = results.get('files', [])
     
     if items:
         return items[0]['id']
-    
-    # 새 폴더 생성
-    file_metadata = {
-        'name': folder_name,
-        'mimeType': 'application/vnd.google-apps.folder',
-        'parents': [parent_id]
-    }
-    folder = service.files().create(body=file_metadata, fields='id').execute()
-    print(f"  [DRIVE] 폴더 생성: {folder_name}")
-    return folder.get('id')
+    raise Exception(f"폴더를 찾을 수 없습니다: {folder_name} (미리 동기화되어 있어야 합니다.)")
 
 
 def ensure_category_folder(service, parent_folder_id: str, group_name: str, cat_id: str, cat_name: str) -> str:
-    """카테고리 폴더 경로를 보장합니다.
-    
-    예: 04_카테고리_분석/A_금융_시장/A-1_글로벌_통화정책/
-    """
+    """카테고리 폴더 경로를 찾습니다."""
     # 1. 04_카테고리_분석 폴더
-    root_id = find_or_create_folder(service, '04_카테고리_분석', parent_folder_id)
+    root_id = find_folder(service, '04_카테고리_분석', parent_folder_id)
     
     # 2. 그룹 폴더 (예: A_금융_시장)
-    group_id = find_or_create_folder(service, group_name, root_id)
+    group_id = find_folder(service, group_name, root_id)
     
     # 3. 카테고리 폴더 (예: A-1_글로벌_통화정책)
     cat_folder_name = f"{cat_id}_{cat_name}"
-    cat_id_folder = find_or_create_folder(service, cat_folder_name, group_id)
+    cat_id_folder = find_folder(service, cat_folder_name, group_id)
     
     return cat_id_folder
 
 
-def upload_text_file(service, folder_id: str, file_name: str, content: str, mime_type: str = 'text/markdown'):
-    """텍스트 파일을 Google Drive에 업로드합니다 (항상 새 파일 생성)."""
-    file_metadata = {
-        'name': file_name,
-        'parents': [folder_id]
-    }
+def append_text_to_file(service, folder_id: str, file_name: str, new_content: str, date_str: str):
+    """기존 마크다운 파일 상단에 새 리포트를 누적 업데이트합니다."""
+    query = f"name='{file_name}' and '{folder_id}' in parents and trashed=false"
+    results = service.files().list(q=query, fields='files(id, name)').execute()
+    items = results.get('files', [])
     
-    media = MediaIoBaseUpload(
-        io.BytesIO(content.encode('utf-8')),
-        mimetype=mime_type,
-        resumable=True
-    )
-    
-    file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id, name'
-    ).execute()
-    
-    print(f"  [DRIVE] 파일 업로드: {file_name}")
-    return file.get('id')
+    if items:
+        file_id = items[0]['id']
+        request = service.files().get_media(fileId=file_id)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+        
+        existing_content = fh.getvalue().decode('utf-8')
+        
+        # 새 리포트를 맨 위 (제목 아래)에 추가
+        lines = existing_content.split('\n')
+        title_line = lines[0] if lines else f"# {file_name.replace('.md', '')}"
+        rest_content = '\n'.join(lines[1:])
+        
+        header_separator = f"\n\n## 🗓️ 업데이트 날짜: {date_str}\n\n"
+        final_content = title_line + header_separator + new_content + "\n\n---\n" + rest_content
+        
+        media = MediaIoBaseUpload(
+            io.BytesIO(final_content.encode('utf-8')),
+            mimetype='text/markdown',
+            resumable=True
+        )
+        service.files().update(fileId=file_id, media_body=media).execute()
+        print(f"  [DRIVE] 리포트 누적 업데이트 완료: {file_name}")
+    else:
+        print(f"  [ERROR] 누적할 마크다운 파일이 없습니다: {file_name} (미리 생성되어 있어야 합니다.)")
 
 
 def upload_or_update_csv(service, folder_id: str, file_name: str, new_df: pd.DataFrame):
-    """CSV 파일을 업로드하거나, 기존 파일이 있으면 행을 추가합니다.
-    
-    기존 macro_from202605.py의 process_file() 패턴을 재활용합니다.
-    """
+    """CSV 파일에 새로운 행을 추가 업데이트합니다 (생성하지 않음)."""
     if new_df.empty:
         print(f"  [SKIP] {file_name}: 수집된 데이터 없음")
         return
@@ -117,8 +110,11 @@ def upload_or_update_csv(service, folder_id: str, file_name: str, new_df: pd.Dat
             _, done = downloader.next_chunk()
         
         fh.seek(0)
-        existing_df = pd.read_csv(fh)
-        
+        try:
+            existing_df = pd.read_csv(fh)
+        except:
+            existing_df = pd.DataFrame(columns=['Date', 'Indicator', 'Value', 'Unit', 'Frequency'])
+            
         # 중복 체크 (같은 날짜 + 같은 지표명이면 건너뜀)
         existing_df['Date'] = existing_df['Date'].astype(str)
         new_df['Date'] = new_df['Date'].astype(str)
@@ -142,27 +138,17 @@ def upload_or_update_csv(service, folder_id: str, file_name: str, new_df: pd.Dat
         csv_bytes = final_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
         media = MediaIoBaseUpload(io.BytesIO(csv_bytes), mimetype='text/csv', resumable=True)
         service.files().update(fileId=file_id, media_body=media).execute()
-        print(f"  [DRIVE] CSV 업데이트: {file_name} (+{len(filtered_rows)}행)")
-    
+        print(f"  [DRIVE] CSV 누적 업데이트 완료: {file_name} (+{len(filtered_rows)}행)")
     else:
-        # 새 파일 생성
-        file_metadata = {'name': file_name, 'parents': [folder_id]}
-        csv_bytes = new_df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
-        media = MediaIoBaseUpload(io.BytesIO(csv_bytes), mimetype='text/csv', resumable=True)
-        service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        print(f"  [DRIVE] CSV 신규 생성: {file_name} ({len(new_df)}행)")
+        print(f"  [ERROR] 누적할 CSV 파일이 없습니다: {file_name} (미리 생성되어 있어야 합니다.)")
 
 
 def get_previous_report(service, folder_id: str, cat_id: str, cat_name: str) -> str:
-    """지난주 리포트를 Google Drive에서 다운로드합니다."""
+    """누적 리포트에서 지난주(가장 상단) 리포트 내용을 추출합니다."""
     try:
-        query = f"name contains '[{cat_id}_{cat_name}] 주간 리포트' and '{folder_id}' in parents and trashed=false"
-        results = service.files().list(
-            q=query, 
-            fields='files(id, name)',
-            orderBy='name desc',  # 날짜순 역순
-            pageSize=1
-        ).execute()
+        file_name = f"{cat_id}_누적_리포트.md"
+        query = f"name='{file_name}' and '{folder_id}' in parents and trashed=false"
+        results = service.files().list(q=query, fields='files(id)').execute()
         items = results.get('files', [])
         
         if items:
@@ -174,7 +160,13 @@ def get_previous_report(service, folder_id: str, cat_id: str, cat_name: str) -> 
             while not done:
                 _, done = downloader.next_chunk()
             fh.seek(0)
-            return fh.read().decode('utf-8')
+            content = fh.read().decode('utf-8')
+            
+            # --- 로 분리된 섹션 중 첫 번째(최신) 리포트만 반환
+            parts = content.split('---')
+            if len(parts) > 1:
+                return parts[0].strip()
+            return content.strip()
     except Exception as e:
         print(f"  [WARNING] 이전 리포트 조회 실패: {e}")
     

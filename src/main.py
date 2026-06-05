@@ -24,7 +24,7 @@ from src.searcher import search_news
 from src.analyzer import generate_analysis, load_prompt
 from src.uploader import (
     get_drive_service, ensure_category_folder,
-    upload_or_update_csv, upload_text_file, get_previous_report
+    upload_or_update_csv, append_text_to_file, get_previous_report
 )
 
 # Google Drive 상위 폴더 ID ([세계 분석] 폴더)
@@ -122,9 +122,9 @@ def run_category(cat_id: str, cat_config: dict, service, dry_run: bool = False):
             upload_or_update_csv(service, folder_id, csv_name, quant_df)
         
         # MD 업로드 (정성 리포트)
-        date_str = datetime.now().strftime("%Y%m%d")
-        md_name = f"[{cat_id}_{cat_name}] 주간 리포트_{date_str}.md"
-        upload_text_file(service, folder_id, md_name, report_md)
+        today = datetime.now().strftime("%Y-%m-%d")
+        report_name = f"{cat_id}_누적_리포트.md"
+        append_text_to_file(service, folder_id, report_name, report_md, today)
     
     print(f"[DONE] {cat_id}: {cat_name_kr} ✓")
 
