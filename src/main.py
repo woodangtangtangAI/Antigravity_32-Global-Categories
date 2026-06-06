@@ -28,7 +28,7 @@ from src.uploader import (
 )
 
 # Google Drive 상위 폴더 ID ([세계 분석] 폴더)
-GDRIVE_PARENT_FOLDER_ID = os.environ.get('GDRIVE_PARENT_FOLDER_ID', '1H4cnXcRpjV_PGT3Rwg-4Qk_JE7VuBVlI')
+GDRIVE_PARENT_FOLDER_ID = os.environ.get('GDRIVE_PARENT_FOLDER_ID', '1d7NsdNtejQ5zxaZRQPGBZGdWiDCQes0J')
 PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'prompts')
 
 
