@@ -27,8 +27,8 @@ from src.uploader import (
     upload_or_update_csv, append_text_to_file, get_previous_report
 )
 
-# Google Drive 상위 폴더 ID ([세계 분석] 폴더)
-GDRIVE_PARENT_FOLDER_ID = os.environ.get('GDRIVE_PARENT_FOLDER_ID', '1d7NsdNtejQ5zxaZRQPGBZGdWiDCQes0J')
+# Google Drive [세계 분석] 폴더 ID (실제 확인된 ID 고정)
+GDRIVE_PARENT_FOLDER_ID = '1d7NsdNtejQ5zxaZRQPGBZGdWiDCQes0J'
 PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'prompts')
 
 

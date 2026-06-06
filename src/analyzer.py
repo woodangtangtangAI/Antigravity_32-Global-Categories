@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Gemini 1.5 Pro 정성 분석 생성 모듈
-
-정량 데이터와 뉴스 검색 결과를 기반으로 주간 분석 리포트를 작성합니다.
-"""
+"""제미나이 정성 분석 생성 모듈"""
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 def load_prompt(prompt_dir: str, prompt_file: str) -> str:
     """프롬프트 템플릿 파일을 로드합니다."""
@@ -50,8 +48,7 @@ def generate_analysis(
     if not api_key:
         return f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> GEMINI_API_KEY가 설정되지 않아 AI 분석을 생성할 수 없습니다.\n"
     
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    client = genai.Client(api_key=api_key)
     
     # 뉴스 결과 포맷팅
     news_text = "(이번 주 검색된 뉴스가 없습니다. 자체 지식 기반으로 분석하세요.)"
@@ -90,9 +87,20 @@ def generate_analysis(
 """
     
     try:
-        response = model.generate_content(full_prompt)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=full_prompt
+        )
         return response.text
     except Exception as e:
-        error_msg = f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> Gemini API 호출 중 에러 발생: {e}\n"
-        print(f"  [GEMINI ERROR] {category_id}: {e}")
-        return error_msg
+        # fallback: gemini-1.5-flash·pro-latest 시도
+        try:
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=full_prompt
+            )
+            return response.text
+        except Exception as e2:
+            error_msg = f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> Gemini API 호출 중 에러 발생: {e2}\n"
+            print(f"  [GEMINI ERROR] {category_id}: {e2}")
+            return error_msg
