@@ -119,12 +119,18 @@ def run_category(cat_id: str, cat_config: dict, service, dry_run: bool = False):
         # CSV 업로드 (정량 데이터가 있는 경우)
         if quant_df is not None and not quant_df.empty:
             csv_name = f"{cat_id}_DB.csv"
-            upload_or_update_csv(service, folder_id, csv_name, quant_df)
+            try:
+                upload_or_update_csv(service, folder_id, csv_name, quant_df)
+            except Exception as e:
+                print(f"  [DRIVE SKIP] CSV 업로드 실패 (다음 주에 시도): {e}")
         
         # MD 업로드 (정성 리포트)
         today = datetime.now().strftime("%Y-%m-%d")
         report_name = f"{cat_id}_누적_리포트.md"
-        append_text_to_file(service, folder_id, report_name, report_md, today)
+        try:
+            append_text_to_file(service, folder_id, report_name, report_md, today)
+        except Exception as e:
+            print(f"  [DRIVE SKIP] MD 업로드 실패 (다음 주에 시도): {e}")
     
     print(f"[DONE] {cat_id}: {cat_name_kr} ✓")
 
