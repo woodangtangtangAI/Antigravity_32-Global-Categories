@@ -88,15 +88,14 @@ def generate_analysis(
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-2.5-flash',
             contents=full_prompt
         )
         return response.text
     except Exception as e:
-        # fallback: gemini-1.5-flash·pro-latest 시도
         try:
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-flash-latest',
                 contents=full_prompt
             )
             return response.text
