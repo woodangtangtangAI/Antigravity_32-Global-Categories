@@ -31,7 +31,7 @@ CATEGORIES = {
             "FRED": {
                 "미국_기준금리": ["FEDFUNDS", "금리", "%", "Monthly"],
                 "유럽_기준금리": ["ECBDFR", "금리", "%", "Monthly"],
-                "일본_기준금리": ["INTDSRJPM193N", "금리", "%", "Monthly"],
+                "일본_콜금리": ["IRSTCI01JPM156N", "금리", "%", "Monthly"],
                 "미국_실질금리_10Y": ["DFII10", "금리", "%", "Monthly"],
             },
             "YFINANCE": {},
@@ -53,7 +53,7 @@ CATEGORIES = {
             "FRED": {
                 "하이일드_OAS": ["BAMLH0A0HYM2", "신용", "bp", "Daily"],
                 "IG_스프레드": ["BAMLC0A4CBBB", "신용", "bp", "Daily"],
-                "TED_스프레드": ["TEDRATE", "신용", "%", "Daily"],
+                "장단기스프레드_10Y2Y": ["T10Y2Y", "금리", "%", "Daily"],
             },
             "YFINANCE": {},
         },
@@ -431,6 +431,8 @@ CATEGORIES = {
             "FRED": {},
             "YFINANCE": {
                 "유전체학ETF": ["ARKG", "바이오테크", "USD", "Weekly"],
+                "CRISPR치료제": ["CRSP", "바이오테크", "USD", "Weekly"],
+                "빔테라퓨틱스": ["BEAM", "바이오테크", "USD", "Weekly"],
             },
         },
         "search_keywords": [
@@ -450,6 +452,7 @@ CATEGORIES = {
             "FRED": {},
             "YFINANCE": {
                 "우주ETF": ["UFO", "우주", "USD", "Weekly"],
+                "ARK우주ETF": ["ARKX", "우주", "USD", "Weekly"],
             },
         },
         "search_keywords": [
@@ -494,7 +497,8 @@ CATEGORIES = {
         "quantitative": {
             "FRED": {},
             "YFINANCE": {
-                "유럽방산ETF": ["^STOXX50E", "유럽", "Pt", "Weekly"],
+                "유럽증시_STOXX50": ["^STOXX50E", "유럽", "Pt", "Weekly"],
+                "BAE시스템즈_ADR": ["BAESY", "방산", "USD", "Weekly"],
             },
         },
         "search_keywords": [
@@ -653,6 +657,7 @@ CATEGORIES = {
         "quantitative": {
             "FRED": {
                 "지니계수_미국": ["SIPOVGINIUSA", "불평등", "Index", "Yearly"],
+                "가구중위소득_미국": ["MEHOINUSA646N", "소득", "USD", "Yearly"],
             },
             "YFINANCE": {},
         },
