@@ -11,8 +11,8 @@ from src.config import CATEGORIES
 from src.main import run_category
 from src.uploader import get_drive_service
 
-# 누락된 11개 카테고리 지정
-missing_categories = ['B-9', 'C-4', 'D-3', 'E-1', 'E-2', 'E-4', 'F-1', 'F-2', 'F-3', 'G-2', 'G-3']
+# 누락된 1개 카테고리 지정
+missing_categories = ['E-1']
 
 def main():
     service = get_drive_service()
