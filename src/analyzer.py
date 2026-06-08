@@ -91,15 +91,20 @@ def generate_analysis(
             model='gemini-2.5-flash',
             contents=full_prompt
         )
-        return response.text
+        if response.text:
+            return response.text
+        raise ValueError("Empty response or blocked by safety settings")
     except Exception as e:
         try:
             response = client.models.generate_content(
                 model='gemini-flash-latest',
                 contents=full_prompt
             )
-            return response.text
+            if response.text:
+                return response.text
+            raise ValueError("Empty response or blocked by safety settings on fallback")
         except Exception as e2:
             error_msg = f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> Gemini API 호출 중 에러 발생: {e2}\n"
             print(f"  [GEMINI ERROR] {category_id}: {e2}")
             return error_msg
+
