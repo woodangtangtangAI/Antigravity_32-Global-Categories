@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """제미나이 정성 분석 생성 모듈"""
 import os
 from google import genai
@@ -88,7 +88,7 @@ def generate_analysis(
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-flash-latest',
             contents=full_prompt
         )
         if response.text:
