@@ -1,12 +1,12 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """제미나이 정성 분석 생성 모듈"""
 import os
+import time
 from google import genai
 from google.genai import types
 
 def load_prompt(prompt_dir: str, prompt_file: str) -> str:
     """프롬프트 템플릿 파일을 로드합니다."""
-    # 기본 프롬프트 로드
     base_path = os.path.join(prompt_dir, 'base_prompt.txt')
     group_path = os.path.join(prompt_dir, prompt_file)
     
@@ -31,19 +31,7 @@ def generate_analysis(
     prompt_template: str,
     prev_report: str = "",
 ) -> str:
-    """Gemini 1.5 Pro API를 호출하여 주간 정성 분석 리포트를 생성합니다.
-    
-    Args:
-        category_id: 카테고리 코드 (예: "A-1")
-        category_name: 카테고리 한글 이름
-        quant_summary: 정량 데이터 텍스트 요약
-        news_results: 뉴스 검색 결과 리스트
-        prompt_template: 시스템 프롬프트 텍스트
-        prev_report: 지난주 리포트 텍스트 (연속성 확보용)
-    
-    Returns:
-        생성된 분석 리포트 마크다운 텍스트
-    """
+    """Gemini 2.5 Flash API를 호출하여 주간 정성 분석 리포트를 생성합니다."""
     api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
         return f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> GEMINI_API_KEY가 설정되지 않아 AI 분석을 생성할 수 없습니다.\n"
@@ -86,25 +74,21 @@ def generate_analysis(
 리포트 상단에 `# [{category_id}] {category_name} — 주간 분석 리포트`를 제목으로 넣으세요.
 """
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=full_prompt
-        )
-        if response.text:
-            return response.text
-        raise ValueError("Empty response or blocked by safety settings")
-    except Exception as e:
+    # 안정적인 2.5 Flash 모델 사용 및 최대 3회 재시도
+    for attempt in range(1, 4):
         try:
             response = client.models.generate_content(
-                model='gemini-flash-latest',
+                model='gemini-2.5-flash',
                 contents=full_prompt
             )
-            if response.text:
+            if response.text and len(response.text.strip()) > 50:
                 return response.text
-            raise ValueError("Empty response or blocked by safety settings on fallback")
-        except Exception as e2:
-            error_msg = f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> Gemini API 호출 중 에러 발생: {e2}\n"
-            print(f"  [GEMINI ERROR] {category_id}: {e2}")
-            return error_msg
-
+            raise ValueError("Empty response or blocked by safety settings")
+        except Exception as e:
+            print(f"  [GEMINI ATTEMPT {attempt}/3] {category_id}: {e}")
+            if attempt < 3:
+                time.sleep(15)
+            else:
+                error_msg = f"# [{category_id}] {category_name} 주간 리포트\n\n> [!WARNING]\n> Gemini API 호출 중 에러 발생: {e}\n"
+                print(f"  [GEMINI ERROR] {category_id}: {e}")
+                return error_msg

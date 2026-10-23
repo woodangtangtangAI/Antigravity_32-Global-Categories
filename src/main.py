@@ -10,7 +10,11 @@ import os
 import sys
 import json
 import time
+import socket
 from datetime import datetime
+
+# 소켓 타임아웃 60초 설정 (네트워크 무한 대기 방지)
+socket.setdefaulttimeout(60)
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
