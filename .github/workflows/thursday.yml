@@ -2,13 +2,13 @@ name: Thursday - 지정학·규제 (D그룹 + E그룹)
 
 on:
   schedule:
-    - cron: '0 21 * * 3'
+    - cron: '19 21 * * 3'
   workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 70
 
     steps:
       - uses: actions/checkout@v4

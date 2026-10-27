@@ -2,13 +2,13 @@ name: Friday - 사회·환경 (F그룹 + G그룹)
 
 on:
   schedule:
-    - cron: '0 21 * * 4'
+    - cron: '11 21 * * 4'
   workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4

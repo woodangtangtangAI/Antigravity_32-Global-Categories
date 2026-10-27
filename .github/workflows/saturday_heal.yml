@@ -1,0 +1,42 @@
+name: Saturday Self-Heal - 주간 누락·실패 자동 복구 (전 카테고리 점검)
+
+on:
+  schedule:
+    # 매주 토요일 오전 07:15 KST (금요일 22:15 UTC) — 월~금 실행분 전수 점검 후 누락본만 자동 생성
+    - cron: '15 22 * * 5'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "실행 대상 ('heal'=누락분만 자동복구, 요일명, 또는 'B-2,D-1' 형식 카테고리 ID)"
+        required: false
+        default: 'heal'
+      force_run:
+        description: "최근 리포트가 있어도 강제 재생성 ('true' / 'false')"
+        required: false
+        default: 'false'
+
+jobs:
+  self_heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Self-Heal & Missing Backfill
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          GDRIVE_PARENT_FOLDER_ID: ${{ secrets.GDRIVE_PARENT_FOLDER_ID }}
+          FORCE_RUN: ${{ inputs.force_run || 'false' }}
+        run: python src/main.py "${{ inputs.target || 'heal' }}"

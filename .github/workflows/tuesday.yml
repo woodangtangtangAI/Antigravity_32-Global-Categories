@@ -2,13 +2,13 @@ name: Tuesday - 산업·인프라 (B그룹I)
 
 on:
   schedule:
-    - cron: '0 21 * * 1'
+    - cron: '13 21 * * 1'
   workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 65
 
     steps:
       - uses: actions/checkout@v4
