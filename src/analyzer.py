@@ -114,10 +114,10 @@ def generate_analysis(
     model_fallback_chain = [
         ("Primary-2.5-Flash", "gemini-2.5-flash", 15),
         ("Retry-2.5-Flash", "gemini-2.5-flash", 25),
+        ("Fallback-2.5-Pro", "gemini-2.5-pro", 15),
         ("Fallback-2.0-Flash", "gemini-2.0-flash", 15),
         ("Fallback-2.0-Flash-Retry", "gemini-2.0-flash", 20),
-        ("Fallback-2.5-Flash-Lite", "gemini-2.5-flash-lite", 15),
-        ("Fallback-2.5-Flash-Lite-Retry", "gemini-2.5-flash-lite", 0),
+        ("Fallback-2.5-Flash-Final", "gemini-2.5-flash", 0),
     ]
 
     last_err = None
